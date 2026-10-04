@@ -1,0 +1,4 @@
+interface:
+  display_name: "科研配图转可编辑 SVG"
+  short_description: "保留科研配图原布局，使用 Noto Sans 生成分层且文字可编辑的 SVG"
+  default_prompt: "请使用 $research-figure-to-svg，把这张科研配图转换为分层 SVG，保留可编辑文字，默认使用 Noto Sans，按信息层级选择字重。"
