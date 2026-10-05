@@ -110,7 +110,7 @@ def main():
     args = parser.parse_args()
     fonts = args.fonts or [
         'Noto Sans Display SemiCondensed SemiBold', 'Noto Sans Display SemiCondensed',
-        'Noto Sans Display', 'Noto Sans SC', 'Noto Sans CJK SC',
+        'Noto Sans Display', 'Noto Sans SemiCondensed SemiBold', 'Noto Sans SC', 'Noto Sans CJK SC',
     ]
     try:
         result = validate(args.svg, fonts)

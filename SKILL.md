@@ -47,6 +47,7 @@ description: 将科研配图、论文示意图或已有 SVG 转换或微调为�
 - 先确认实际用于测量和渲染的完整字形可用。优先复用用户提供或本机已有字体；缺失时可从 [Noto 官方静态字形文件](https://github.com/notofonts/noto-fonts/blob/main/hinted/ttf/NotoSansDisplay/NotoSansDisplay-SemiCondensedSemiBold.ttf) 获取到任务目录，不擅自安装系统字体。官方 Google Fonts 的 [Noto Sans Display](https://github.com/google/fonts/tree/main/ofl/notosansdisplay) 版本可能采用不同字体命名；使用其他版本前核对元数据和实际外观。
 - SVG 使用渲染器实际能解析到该字形的字体名称。静态字体可声明 `font-family="Noto Sans Display SemiCondensed SemiBold"`，不再叠加合成字重或水平缩放。不要把 Figma 的完整 style 字符串写入 CSS `font-style`，该属性只表达 normal、italic 等样式。
 - Figma 原生字体匹配优先使用实际可用的 `{ family: "Noto Sans", style: "Display SemiCondensed SemiBold" }`。若软件显示另一种 family/style 组合，按字体列表和元数据核对，不能只匹配 family 就认为字形一致。
+- 用户已有斜体强调时，使用同一 Display 半窄 SemiBold 的斜体字形并核对元数据。[官方斜体文件](https://github.com/notofonts/noto-fonts/blob/main/hinted/ttf/NotoSansDisplay/NotoSansDisplay-SemiCondensedSemiBoldItalic.ttf) 的 typographic family/style 是 `Noto Sans` / `Display SemiCondensed SemiBold Italic`，legacy family 却是 `Noto Sans SemiCondensed SemiBold`，legacy subfamily 是 `Italic`。不能把完整名称任意拼成 `font-family`，也不能因 legacy 名称少了 Display 就判断实际字形。
 - 使用可变字体时，确认其 Display 设计版本，核对并设置 `wght=600`、`wdth=87.5`（semi-condensed），再验证渲染器确实应用了这些轴；不把未验证的可变字体声明当成指定静态字形已经匹配。
 - 中英文混排可在指定 Latin 字形后添加 Noto Sans SC 或 Noto Sans CJK SC；中文需确认对应字体和字形可用。参见 [Noto 官方用法](https://github.com/notofonts/noto-docs/blob/main/docs/website/use.md)。
 - 字体变更后重新测量文字宽度、行高和边界，调整文字框、换行或间距。不要通过非等比缩放文字来塞进原框，也不要为了排版方便改成 Arial、Inter 或轮廓文字。
@@ -72,6 +73,8 @@ description: 将科研配图、论文示意图或已有 SVG 转换或微调为�
 使用自包含 SVG、稳定且可识别的 `id` 和 `<g>`。按能一起移动或编辑的模块分组，例如记忆卡片、方法面板、注入记录、人物和结果；避免一条文字拆成逐字对象。确保渐变、剪裁和蒙版的引用有效。复杂插画是否含位图，要按实际结构说明。
 
 如需查找本机渲染库，在 Codex 中可用 `load_workspace_dependencies` 定位运行时，再选择可用的离线 SVG 渲染器。预览用 PNG；正式可编辑交付仍是 SVG。不要用 AI 重新画文字或数值来代替可编辑重建。
+
+字体声明或 `fc-match` 匹配成功不能单独证明实际渲染器采用了该字体。可用短文本的字形、宽度和笔画与目标字体文件的测量或渲染对照，排除静默替代。渲染器无法加载字体时，可在仅供预览的副本中用真实字体文件进行文字塑形及字形路径渲染；正式交付 SVG 始终保留 `<text>` / `<tspan>`，不能误交付用于预览的轮廓副本。这种预览只验证目标字形的排版，不证明其他软件已经解析到该字体。
 
 运行随附检查脚本：
 
