@@ -1,6 +1,6 @@
 ---
 name: research-figure-to-svg
-description: 将科研配图、论文示意图或已有 SVG 转换或微调为分层、文字可编辑的 SVG，供用户导入 Figma。默认使用 Noto Sans，并按信息层级选择字重。适用于图片转可编辑图、保留原排版重建、单栏适配及字体调整；普通图片润色不使用本技能。
+description: 将科研配图、论文示意图或已有 SVG 转换或微调为分层、文字可编辑的 SVG，供用户导入 Figma。连贯多行文字保留为一个文本对象，默认使用 Noto Sans 的 Display SemiCondensed SemiBold 字形。适用于图片转可编辑图、保留原排版重建、单栏适配及字体调整；普通图片润色不使用本技能。
 ---
 
 # 科研配图转可编辑 SVG
@@ -24,17 +24,40 @@ description: 将科研配图、论文示意图或已有 SVG 转换或微调为�
 
 “保留原排版”“只换字体”“只改宽度”不能解释成重新设计。参考图与原图有不同研究内容时，按用户指定的内容来源处理，不能自行替换结论。
 
-## 默认字体：Noto Sans
+## 连贯多行文字：一个文本对象
 
-除非用户另有明确要求，普通标题、正文、标签均使用 **Noto Sans**，并在 SVG 中声明真实的 `font-family`。字重根据图的信息层级和最终尺寸自由判断，不必逐项向用户询问。
+按内容识别文本块，而不是按屏幕上的行数拆对象。一个完整句子、标签或段落，即使显示两行或多行，也保留为一个 `<text>`，内部用 `<tspan>` 设置换行位置。不能每行生成一个 `<text>`，也不能只把几个独立文本框放进同一个 `<g>` 就称为一个文本对象。
 
-可从标题 600–700、阶段标题或强调词 500–600、正文 400、辅助标签 400 开始调整；这些只是起点，不是固定模板。保持相同层级的一致性，避免把所有文字都加粗或依靠过细笔画区分层级。
+- 合并已拆开的行时，核对完整原文、行序、词间空格、行距和对齐；保留行内颜色、粗细等差异。不要靠相邻距离自动合并独立标题、列表项或不同卡片中的文字。
+- 需要 Figma 原生文字时，一个逻辑文本块对应一个 `TEXT` 节点，`characters` 中使用真正的 `\n`；需要混合样式时设置字符范围样式。SVG 转 Figma 的转换器也应以父 `<text>` 为单位收集各行，不能逐个 `<tspan>` 或逐行创建文本层。
+- 单个 `<text>` 是 SVG 的结构要求，不能保证 Figma 直接导入后的节点数量。若目标软件仍拆行，检查实际导入结果，并使用可用的原生文字恢复流程；交付时说明验证范围。
 
-- 先确认实际用于测量和渲染的 Noto Sans 字体可用。缺失时从 [Google Fonts 官方仓库](https://github.com/google/fonts/tree/main/ofl/notosans) 获取所需字体到任务目录，或使用已有字体资源；不要只改字体声明后让渲染器静默使用替代字体，也不要为预览擅自安装系统字体。
-- 中英文混排可使用 `font-family="Noto Sans, Noto Sans SC, sans-serif"`；中文需确认对应 Noto Sans SC 或 Noto Sans CJK SC 字体和字形可用。参见 [Noto 官方用法](https://github.com/notofonts/noto-docs/blob/main/docs/website/use.md)。
+例如下方两行属于同一条服药信息；末尾空格保留了原句的词边界，两个 `<tspan>` 仍归属于同一个 `<text>`：
+
+```xml
+<text id="medication-label" font-family="Noto Sans Display SemiCondensed SemiBold" font-size="16" xml:space="preserve"><tspan x="20" y="40">Warfarin 5 mg </tspan><tspan x="20" y="60">every morning</tspan></text>
+```
+
+## 默认字体：Noto Sans / Display SemiCondensed SemiBold
+
+除非用户另有明确要求，标题、正文和标签使用 **Noto Sans**，字形使用 **Display SemiCondensed SemiBold**。这是完整字形要求，包含 Display、半窄体和实际 600 字重；不能仅声明普通 `Noto Sans` 再加粗来代替。用户指定了此字形时，保留该字形，通过字号、间距或颜色区分信息层级；只有用户允许其他字重时才调整。
+
+该静态字体的官方元数据是：typographic family `Noto Sans`，typographic style `Display SemiCondensed SemiBold`，legacy family `Noto Sans Display SemiCondensed SemiBold`，PostScript 名称 `NotoSans-DisplaySemiCondensedSemiBold`。legacy subfamily 标作 `Regular`，但实际字重是 600；不要因此误认成普通 Regular。
+
+- 先确认实际用于测量和渲染的完整字形可用。优先复用用户提供或本机已有字体；缺失时可从 [Noto 官方静态字形文件](https://github.com/notofonts/noto-fonts/blob/main/hinted/ttf/NotoSansDisplay/NotoSansDisplay-SemiCondensedSemiBold.ttf) 获取到任务目录，不擅自安装系统字体。官方 Google Fonts 的 [Noto Sans Display](https://github.com/google/fonts/tree/main/ofl/notosansdisplay) 版本可能采用不同字体命名；使用其他版本前核对元数据和实际外观。
+- SVG 使用渲染器实际能解析到该字形的字体名称。静态字体可声明 `font-family="Noto Sans Display SemiCondensed SemiBold"`，不再叠加合成字重或水平缩放。不要把 Figma 的完整 style 字符串写入 CSS `font-style`，该属性只表达 normal、italic 等样式。
+- Figma 原生字体匹配优先使用实际可用的 `{ family: "Noto Sans", style: "Display SemiCondensed SemiBold" }`。若软件显示另一种 family/style 组合，按字体列表和元数据核对，不能只匹配 family 就认为字形一致。
+- 使用可变字体时，确认其 Display 设计版本，核对并设置 `wght=600`、`wdth=87.5`（semi-condensed），再验证渲染器确实应用了这些轴；不把未验证的可变字体声明当成指定静态字形已经匹配。
+- 中英文混排可在指定 Latin 字形后添加 Noto Sans SC 或 Noto Sans CJK SC；中文需确认对应字体和字形可用。参见 [Noto 官方用法](https://github.com/notofonts/noto-docs/blob/main/docs/website/use.md)。
 - 字体变更后重新测量文字宽度、行高和边界，调整文字框、换行或间距。不要通过非等比缩放文字来塞进原框，也不要为了排版方便改成 Arial、Inter 或轮廓文字。
 - 科研符号、上下标和公式要保留含义。简单公式可用 Unicode 和 `<tspan>` 的字号、基线处理；复杂公式若只能保留为路径，应先核对该局部不可编辑文字的取舍，不能宣称全部文字可编辑。
-- Matplotlib 导出普通文字时使用 `rcParams["font.family"] = "Noto Sans"` 和 `rcParams["svg.fonttype"] = "none"`，仍需检查最终 SVG，尤其是数学文本。见 [官方 SVG 字体说明](https://matplotlib.org/stable/users/explain/text/fonts.html#fonts-in-svg)。
+- Matplotlib 使用实际解析到指定字形的字体名称或字体文件，并设置 `rcParams["svg.fonttype"] = "none"`。导出后仍需检查数学文本，以及 Matplotlib 是否把同一段的多行文字拆成多个 `<text>`；必要时按逻辑文本块合并。见 [官方 SVG 字体说明](https://matplotlib.org/stable/users/explain/text/fonts.html#fonts-in-svg)。
+
+## 从 Figma 导出修改稿
+
+用户要导出修改稿继续编辑时，建议选择整张图的最外层 Frame：启用 `Include "id" attribute`，关闭 `Outline text`。前者保留基于对象名称的 ID，后者保留真实文字；两者都不会自动合并已经拆开的文本框，也不保证完整原生图层往返保留。
+
+`Include bounding box` 针对单独文字的导出范围，`Ignore overlapping layers` 决定是否包含交叠的其他对象，按实际导出范围选择。导出后检查画布和文字是否完整，再以用户最新导出的 SVG 为编辑基础，保留用户已完成的调整；未收到新版时先完成技能等独立工作，不用旧稿覆盖用户的新修改。
 
 ## 尺寸和布局
 
@@ -56,21 +79,25 @@ description: 将科研配图、论文示意图或已有 SVG 转换或微调为�
 python3 /path/to/research-figure-to-svg/scripts/validate_svg.py "/path/to/figure.svg"
 ```
 
-脚本检查 XML、`viewBox`、唯一 ID、内部引用、字体声明、真实文字和位图数量。用户明确指定其他字体时，可用 `--font-family "指定字体"` 覆盖默认检查；多种字体可重复传入该参数。
+脚本检查 XML、`viewBox`、唯一 ID、内部引用、字体声明、真实文字和位图数量，并报告包含多个 `<tspan>` 的文本对象数及声明的字重、字宽、可变轴。默认字体名单包含指定静态字形及 Display 家族；普通 `Noto Sans` 声明不能单独证明完整字形匹配。用户明确指定其他字体时，可用 `--font-family "指定字体"` 覆盖默认检查；多种字体可重复传入该参数。
 
-脚本通过只说明结构检查通过。还必须用实际 Noto Sans 字体渲染并检查：文字未遗漏、拼写和科研内容正确、未被遮挡或剪裁、彩色词组间距正确、人物比例未变、透明背景符合要求，以及目标栏宽下是否可读。布局保留任务还要对照原图核验模块位置、顺序、配色和装饰。
+脚本通过只说明结构检查通过，不能自动判断哪些相邻行属于一个段落。还必须用实际指定字形渲染并检查：每个完整句子或段落是否对应一个文本对象、文字未遗漏、拼写和科研内容正确、未被遮挡或剪裁、彩色词组间距正确、人物比例未变、透明背景符合要求，以及目标栏宽下是否可读。布局保留任务还要对照原图核验模块位置、顺序、配色和装饰。
 
 默认另存新版，不覆盖原图或旧稿。交付 SVG 链接和最终 PNG 预览，简短写明尺寸、比例、字体及重要的局部限制。明确区分“SVG 文本节点已验证”和“Figma 原生文字已验证”，不要求用户为常规可逆调整再次确认。
 
 ## 示例
 
 **用户请求** → “把这张科研示意图转成能编辑的 SVG，我自己导入 Figma。”  
-**具体操作** → 忠实重建文字、卡片和箭头，按模块分组，使用 Noto Sans 并判断字重；验证和预览本地文件。  
+**具体操作** → 忠实重建文字、卡片和箭头，按模块分组，连贯多行文字放入同一个 `<text>`，使用 Noto Sans 的 Display SemiCondensed SemiBold 字形；验证和预览本地文件。  
 **交付口径** → 提供 SVG 和 PNG，说明文字保留为文本节点；未做 Figma 导入验证，不调用 MCP。
 
 **用户请求** → “这个 SVG 原排版就很好，只加宽一点，字体换成 Noto Sans。”  
 **具体操作** → 保留面板、人物、原文和配色，调整画布及必要的框宽、文字锚点与间距；换字体后重新测量，不拉伸字体和人物。  
 **交付口径** → 交付原排版微调版，报告具体宽高，源文件保留。
+
+**用户请求** → “这个完整句子换行后变成了上下两个文本框；字体要 Noto Sans 的 Display SemiCondensed SemiBold。我已经改了一部分。”
+**具体操作** → 以用户最新 SVG 为基础，保留已改内容；核对原文后合并为一个 `<text>`，内部用 `<tspan>` 定位各行，并使用完整指定字形。
+**交付口径** → 说明单段多行文字与实际字形的验证结果；Figma 原生节点只在真正导入检查后确认。
 
 **用户请求** → “改成适合单栏的高:宽 = 5:4，可以精简重复说明。”  
 **具体操作** → 依据实际栏宽确认图高和字号，按已授权范围调整；保留关键科研内容，使用 Noto Sans。  

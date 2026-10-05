@@ -34,12 +34,16 @@ def validate(path, expected_fonts):
     counts = Counter(e.tag.split('}')[-1] for e in root.iter())
     fonts = Counter()
     weights = Counter()
+    stretches = Counter()
+    variations = Counter()
 
-    def walk(element, inherited_font='', inherited_weight='400'):
+    def walk(element, inherited_font='', inherited_weight='400', inherited_stretch='normal', inherited_variation='normal'):
         style = dict(part.split(':', 1) for part in element.get('style', '').split(';') if ':' in part)
         style = {k.strip(): v.strip() for k, v in style.items()}
         family = style.get('font-family', element.get('font-family', inherited_font))
         weight = style.get('font-weight', element.get('font-weight', inherited_weight))
+        stretch = style.get('font-stretch', element.get('font-stretch', inherited_stretch))
+        variation = style.get('font-variation-settings', element.get('font-variation-settings', inherited_variation))
         if element.tag.split('}')[-1] in {'text', 'tspan'} and (element.text or '').strip():
             primary = family.split(',')[0].strip().strip('\"\'')
             if primary:
@@ -47,6 +51,8 @@ def validate(path, expected_fonts):
             else:
                 warnings.append('A text segment has no resolvable inline/inherited font family.')
             weights[weight] += 1
+            stretches[stretch] += 1
+            variations[variation] += 1
         for value in element.attrib.values():
             for match in re.findall(r'url\(\s*[\"\']?([^\)\"\']+)', value):
                 reference = match.strip()
@@ -61,7 +67,7 @@ def validate(path, expected_fonts):
                 elif not value.startswith('data:'):
                     external_references.add(value)
         for child in element:
-            walk(child, family, weight)
+            walk(child, family, weight, stretch, variation)
 
     walk(root)
     missing = sorted(references - set(ids))
@@ -79,6 +85,7 @@ def validate(path, expected_fonts):
     if counts['style']:
         warnings.append('Stylesheets are not resolved by this checker; inspect class-based typography separately.')
     warnings.append('Actual font loading, visual bounds, completeness and Figma TEXT nodes require separate checks.')
+    warnings.append('Inspect logical text blocks separately; tspan counts do not prove paragraph continuity or correct line grouping.')
     return {
         'file': str(path.resolve()), 'structural_checks_passed': not errors,
         'width': root.get('width'), 'height': root.get('height'), 'viewBox': viewbox,
@@ -86,6 +93,12 @@ def validate(path, expected_fonts):
         'text_elements': counts['text'], 'text_spans': counts['tspan'],
         'groups': counts['g'], 'paths': counts['path'], 'images': counts['image'],
         'declared_font_segments': dict(fonts), 'declared_weight_segments': dict(weights),
+        'declared_stretch_segments': dict(stretches), 'declared_variation_segments': dict(variations),
+        'text_elements_with_multiple_tspans': sum(
+            1 for element in root.iter()
+            if element.tag.split('}')[-1] == 'text'
+            and sum(child.tag.split('}')[-1] == 'tspan' for child in element.iter()) > 1
+        ),
         'errors': errors, 'warnings': sorted(set(warnings)),
     }
 
@@ -95,7 +108,10 @@ def main():
     parser.add_argument('svg', type=Path)
     parser.add_argument('--font-family', action='append', dest='fonts')
     args = parser.parse_args()
-    fonts = args.fonts or ['Noto Sans', 'Noto Sans SC', 'Noto Sans CJK SC']
+    fonts = args.fonts or [
+        'Noto Sans Display SemiCondensed SemiBold', 'Noto Sans Display SemiCondensed',
+        'Noto Sans Display', 'Noto Sans SC', 'Noto Sans CJK SC',
+    ]
     try:
         result = validate(args.svg, fonts)
     except (OSError, ET.ParseError) as error:

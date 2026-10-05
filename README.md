@@ -4,9 +4,9 @@
 
 ## 默认行为
 
-- 使用 **Noto Sans**，按信息层级选择字重。
+- 使用 **Noto Sans · Display SemiCondensed SemiBold**，保留 Display、半窄体和实际 600 字重。
 - 优先保留原图布局、文字、配色和素材；局部调整遵循用户指定范围。
-- 保留真实 `<text>` / `<tspan>` 文本节点，按模块分组。
+- 保留真实 `<text>` / `<tspan>` 文本节点；连贯多行文字属于一个 `<text>`，按模块分组。
 - 交付 SVG 和 PNG 预览，保留源文件。
 - 检查字体声明、分组、内部引用和位图使用，并通过实际渲染核验排版。
 
@@ -30,7 +30,9 @@ git clone https://github.com/Cream-yj/research-figure-to-svg.git "$HOME/.codex/s
 $research-figure-to-svg 把这张科研图转成可编辑 SVG，保留原排版。
 ```
 
-也可以指定单栏尺寸、比例或局部修改范围。默认字体为 Noto Sans，字重由执行时判断；用户的明确要求优先。
+也可以指定单栏尺寸、比例或局部修改范围。默认 family 为 Noto Sans、style 为 Display SemiCondensed SemiBold；用户的明确要求优先。技能会核对实际字体元数据和渲染结果。
+
+从 Figma 导出修改稿时，选择整张图的最外层 Frame，勾选 `Include "id" attribute`，取消勾选 `Outline text`。这些设置保留对象 ID 和真实文字，不会自动把已拆开的多个文本框合并。
 
 ## SVG 结构检查
 
@@ -46,7 +48,9 @@ python3 scripts/validate_svg.py "/path/to/figure.svg"
 python3 scripts/validate_svg.py "/path/to/figure.svg" --font-family "指定字体"
 ```
 
-脚本输出 JSON，失败时返回非零退出码。结构检查不验证实际字体加载、视觉边界、科研内容完整性或 Figma 导入状态，这些需要单独检查。
+脚本输出 JSON，失败时返回非零退出码；同时报告包含多个 `<tspan>` 的文本对象数及声明的字重、字宽、可变轴。默认字体名单包含指定静态字形及 Display 家族；用户明确要求普通 Noto Sans 时，可用 `--font-family "Noto Sans"`。
+
+结构检查不能自动推断段落边界，也不验证实际字体加载、视觉边界、科研内容完整性或 Figma 导入状态，这些需要单独检查。
 
 ## 文件
 
