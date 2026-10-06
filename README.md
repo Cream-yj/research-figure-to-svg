@@ -24,7 +24,25 @@
 
 需要能使用本地技能的 Codex 环境。检查脚本只依赖 **Python 3 标准库**；预览还需要可用的 SVG 渲染工具和实际字体文件，字体核验或绘图所需工具按任务选择。
 
-### 首次安装
+### 直接让 Codex 安装
+
+把下面整段复制到 Codex 对话中即可，无需自己执行安装命令：
+
+```text
+$skill-installer
+请将这个公开 GitHub 仓库中的 research-figure-to-svg 技能安装到我的 Codex 个人技能目录：
+https://github.com/Cream-yj/research-figure-to-svg
+
+技能位于仓库根目录，包含 SKILL.md、agents/ 和 scripts/；
+请以 research-figure-to-svg 作为安装目录名，优先使用当前环境的 skill-installer。
+如果已安装同名技能，请先比较并保留本地修改，再安全更新。
+安装完成后，确认 SKILL.md 和 scripts/validate_svg.py 齐全，
+告诉我实际安装路径，以及如何用 $research-figure-to-svg 调用它。
+```
+
+安装完成后，可以在下一轮对话中附上图片或 SVG，使用 `$research-figure-to-svg` 发起任务。技能调用方式见 [OpenAI 官方技能说明](https://learn.chatgpt.com/docs/skills-and-plugins#use-skills-for-repeatable-work)。
+
+### 手动首次安装
 
 默认安装到个人技能目录；已设置 `CODEX_HOME` 时使用对应目录：
 
@@ -44,6 +62,14 @@ git -C "${CODEX_HOME:-$HOME/.codex}/skills/research-figure-to-svg" pull --ff-onl
 ```
 
 有本地修改或无法快进时，先比较并保留修改，不强制覆盖。通过复制文件安装、目录中没有 `.git` 的版本，需要另行获取最新仓库并比较后更新。
+
+## 推荐模型与推理档位
+
+编写 SVG、拆分科研图层和修复文字布局时，建议使用 **GPT 6.1-sol（`gpt-6.1-sol`）＋极高（`xhigh`）或更高推理档位**；也可以使用具备同等或更强图像理解、SVG 重建能力的模型。复杂人物素材、密集模块、混合样式和连贯多行文字尤其建议采用这一配置。
+
+这是本 skill 的推荐配置，不是官方最低要求或零错误保证。模型能力不能替代结果检查：交付前仍需核对图层拆分、原文完整性、文本对象边界、字体和排版；需要确认 Figma 可编辑性时，按本文的 **Figma MCP → Computer Use** 顺序检查实际导入结果。
+
+模型和可选推理档位以当前账号、客户端及工作区实际提供的选项为准；可参考 [OpenAI 官方 GPT-6.1 Sol 说明](https://learn.chatgpt.com/docs/models#gpt-61-sol)。
 
 ## 使用示例
 
